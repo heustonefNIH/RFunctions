@@ -13,13 +13,13 @@ function(sample.path, combined.peaks){
     },
     #if an error occurs, print this
     error=function(err){
-      message(paste0("failed with sample ", names(frag.path)))
+      message(paste0("failed with sample ", sample.path))
       print(err)
       return(NULL)
     },
     #if a warning occurs, tell me the warning
     warning=function(warn){
-      message(paste0("I'm not sure how a wanring was produced with ", names(frag.path)))
+      message(paste0("I'm not sure how a wanring was produced with ", sample.path))
       print(warn)
       return(NULL)
     }
