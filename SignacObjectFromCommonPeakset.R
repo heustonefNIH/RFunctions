@@ -9,7 +9,7 @@ SignacObjectFromCommonPeakset <- function(sample.path, common.peakset = NULL){
         cells = rownames(frag.list[[2]])
       )
       
-      atac.assay <- CreateChromatinAssay(atac.counts, fragments = frag.obj)
+      atac.assay <- CreateChromatinAssay(atac.counts, fragments = frag.list[[1]])
       atac.obj <- CreateSeuratObject(atac.assay, assay = "ATAC", meta.data = frag.list[[2]], project = sample.id)
       
       return(atac.obj)
