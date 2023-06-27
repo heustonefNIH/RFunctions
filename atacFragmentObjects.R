@@ -9,9 +9,10 @@ GenerateATACFragementObjects <- function(frag.path){
         header = TRUE,
         row.names = 1)[-1,]
       frag.cells <- frag.cells[frag.cells$passed_filters > 500,]
-      tsv.path <- paste0(frag.path, "/outs/fragments.tsv.gz")
-      frag.obj <- CreateFragmentObject(path = tsv.path, cells = rownames(frag.cells))
-      return(frag.obj)
+      frag.path <- paste0(frag.path, "/outs/fragments.tsv.gz")
+      frag.obj <- CreateFragmentObject(path = frag.path, cells = rownames(frag.cells))
+      frag.list <- list(frag.obj, frag.cells)
+      return(frag.list)
     }, 
     error=function(err){
       message(paste0("failed with sample ", frag.path))
