@@ -15,28 +15,9 @@
 library(DoubletFinder)
 library(ggplot2)
 
-runDoubletFinder <- function(seurat.object = NULL, sctransformed = NULL, tot.var = NULL, predicted.doubletRate = 0.05){
+runDoubletFinder <- function(seurat.object = NULL, clutster.dims = cluster.dims, sctransformed = NULL, predicted.doubletRate = 0.05){
 	
 	print("running DoubletFinder")
-	#Run PCA	
-	seurat.object <- RunPCA(seurat.object, features = VariableFeatures(object = seurat.object))
-
-	# determine dimensionality
-	tot.var <- percent.variance(seurat.object@reductions$pca@stdev, plot.var = FALSE, return.val = TRUE)
-	print(paste0("Num pcs for 80% variance: ", length(which(cumsum(tot.var) <= 80))))
-	print(paste0("Num pcs for 85% variance: ", length(which(cumsum(tot.var) <= 85))))
-	print(paste0("Num pcs for 90% variance: ", length(which(cumsum(tot.var) <= 90))))
-	print(paste0("Num pcs for 95% variance: ", length(which(cumsum(tot.var) <= 95))))
-	
-	cluster.dims <- 0
-	if(cum.var.thresh > 0){
-		cluster.dims <- length(which(cumsum(tot.var) <= cum.var.thresh))
-	}
-	
-	seurat.object <- FindNeighbors(seurat.object, dims = 1:cluster.dims)
-	seurat.object <- FindClusters(seurat.object, resolution = resolution)
-	seurat.object <- RunUMAP(seurat.object, dims = 1:cluster.dims)
-
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
 	sweep.res.list <- paramSweep_v3(seurat.object, PCs = 1:cluster.dims, sct = sctransformed)
 	sweep.stats <- summarizeSweep(sweep.res.list, GT = FALSE)
