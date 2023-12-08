@@ -15,7 +15,7 @@
 library(DoubletFinder)
 library(ggplot2)
 
-runDoubletFinder <- function(seurat.object = NULL, clutster.dims = cluster.dims, sctransformed = NULL, predicted.doubletRate = 0.05){
+runDoubletFinder <- function(seurat.object = NULL, clutster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05){
 	
 	print("running DoubletFinder")
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
