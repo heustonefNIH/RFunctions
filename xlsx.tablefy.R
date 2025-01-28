@@ -15,23 +15,30 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
                          start.Row = 1, 
                          col.Names = TRUE){
   
+  `%threshold_high%` <- function(x, y) eval(parse(text = paste(x, high.rule)))
+  `%threshold_veryhigh%` <- function(x, y) eval(parse(text = paste(x, veryhigh.rule)))
+  `%threshold_low%` <- function(x, y) eval(parse(text = paste(x, low.rule)))
+  `%threshold_verylow%` <- function(x, y) eval(parse(text = paste(x, verylow.rule)))
+  
   ##write all markers to table
   if(sort.it == TRUE){
     workbook.table <- workbook.table %>% 
       group_by(cluster) %>%
       mutate(
         sort_group = case_when(
-          avg_log2FC >= 2 ~ 1,          # Group 1: values >= 2
-          avg_log2FC <= -2 ~ 2,         # Group 2: values <= -2
-          avg_log2FC >= 1.5 ~ 3,          # Group 3: values >= 1
-          TRUE ~ 4                  # Default group for remaining values
+          avg_log2FC %threshold_veryhigh% 2 ~ 1,  # Group 1
+          avg_log2FC %threshold_verylow% -2 ~ 2, # Group 2
+          avg_log2FC %threshold_high% 1.5 ~ 3, # Group 3
+          avg_log2FC %threshold_low% 1.5 ~ 4, # Group 4
+          TRUE ~ 5                  # Default group for remaining values
         )
       ) %>%
       arrange(
         sort_group,                 # Sort by groups
         desc(avg_log2FC) * (sort_group == 1) + # Descending for group 1
           avg_log2FC * (sort_group == 2) +    # Ascending for group 2
-          desc(avg_log2FC) * (sort_group == 3) # Descending for group 3
+          desc(avg_log2FC) * (sort_group == 3) + # Descending for group 3
+        avg_log2FC * (sort_group == 4)  # Ascending for group 4
       ) %>% 
       select(-sort_group) %>% 
       mutate(across(.fns = as.character)) %>%
@@ -43,29 +50,29 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
       mutate(across(.fns = as.character)) %>%
       group_split()
   }
-    row.max <- max(
-      sapply(1:length(workbook.table), 
-             function(x){
-               dim(workbook.table[[x]])[1]
-             }
-      )
+  row.max <- max(
+    sapply(1:length(workbook.table), 
+           function(x){
+             dim(workbook.table[[x]])[1]
+           }
     )
-    for(i in 1:length(workbook.table)){
-      gene.count <- dim(workbook.table[[i]])[1]
-      spacer <- row.max - gene.count
-      if(spacer != 0){
-        spacer <- rep(NA, spacer)
-        workbook.table[[i]] <- workbook.table[[i]] %>%
-          tibble::add_row(avg_log2FC = spacer, p_val_adj = spacer, cluster = spacer, gene = spacer, .after = gene.count)
-      }
+  )
+  for(i in 1:length(workbook.table)){
+    gene.count <- dim(workbook.table[[i]])[1]
+    spacer <- row.max - gene.count
+    if(spacer != 0){
+      spacer <- rep(NA, spacer)
+      workbook.table[[i]] <- workbook.table[[i]] %>%
+        tibble::add_row(avg_log2FC = spacer, p_val_adj = spacer, cluster = spacer, gene = spacer, .after = gene.count)
     }
-    workbook.table <- workbook.table %>% 
-      bind_cols() %>% 
-      mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(xlsx.all))), as.numeric)
-    
+  }
+  workbook.table <- workbook.table %>% 
+    bind_cols() %>% 
+    mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(xlsx.all))), as.numeric)
+  
   openxlsx::addWorksheet(workbook.name, sheetName = sheet.name)
   openxlsx::writeData(workbook.name, sheet = sheet.name, x = workbook.table, startCol = start.Col, startRow = start.Row, colNames = col.Names)
-
+  
   if(style == TRUE){
     style.veryhigh <- openxlsx::createStyle(fontColour = "#FFFFFF", bgFill = "#377D43", textDecoration = "bold")
     style.high <- openxlsx::createStyle(fontColour = "#377D43", bgFill = "#CEEED0")
