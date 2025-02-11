@@ -35,9 +35,9 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
       ) %>%
       arrange(
         sort_group,                 # Sort by groups
-        desc(avg_log2FC) * (sort_group == 1) + # Descending for group 1
+        dplyr::desc(avg_log2FC) * (sort_group == 1) + # dplyr::descending for group 1
           avg_log2FC * (sort_group == 2) +    # Ascending for group 2
-          desc(avg_log2FC) * (sort_group == 3) + # Descending for group 3
+          dplyr::desc(avg_log2FC) * (sort_group == 3) + # dplyr::descending for group 3
         avg_log2FC * (sort_group == 4)  # Ascending for group 4
       ) %>% 
       select(-sort_group) %>% 
@@ -68,7 +68,7 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
   }
   workbook.table <- workbook.table %>% 
     bind_cols() %>% 
-    mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(xlsx.all))), as.numeric)
+    mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(workbook.table))), as.numeric)
   
   openxlsx::addWorksheet(workbook.name, sheetName = sheet.name)
   openxlsx::writeData(workbook.name, sheet = sheet.name, x = workbook.table, startCol = start.Col, startRow = start.Row, colNames = col.Names)
