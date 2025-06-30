@@ -15,11 +15,11 @@
 library(DoubletFinder)
 library(ggplot2)
 
-runDoubletFinder <- function(seurat.object = NULL, clutster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05){
+runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05, pANN.reuse = NULL){
 	
 	print("running DoubletFinder")
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
-	sweep.res.list <- paramSweep_v3(seurat.object, PCs = 1:cluster.dims, sct = sctransformed)
+	sweep.res.list <- paramSweep(seurat.object, PCs = 1:cluster.dims, sct = sctransformed)
 	sweep.stats <- summarizeSweep(sweep.res.list, GT = FALSE)
 	bcmvn <- find.pK(sweep.stats)
 	
@@ -39,11 +39,11 @@ runDoubletFinder <- function(seurat.object = NULL, clutster.dims = cluster.dims,
 	nExp_poi <- round(nrow(seurat.object@meta.data) * predicted.doubletRate) 
 	nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
 
-seurat.object <- doubletFinder_v3(seurat.object,
+seurat.object <- doubletFinder(seurat.object,
 																	PCs = 1:cluster.dims, 
 																	pK = pK, 
 																	nExp = nExp_poi, 
-																	reuse.pANN = FALSE,
+																	reuse.pANN = pANN.reuse,
 																	sct = sctransformed)
 names(seurat.object@meta.data)[grep("DF.cl", names(seurat.object@meta.data))] <- "DF.classifications"
 names(seurat.object@meta.data)[grep("pANN", names(seurat.object@meta.data))] <- "pANN"
