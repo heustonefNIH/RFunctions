@@ -25,7 +25,6 @@ runDoubletFinder <- function(seurat.object = NULL, cluster.dims = NULL, sctransf
 		cluster.dims = cluster.dims
 	}
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
-	
 	sweep.res.list <- paramSweep(seurat.object, PCs = 1:cluster.dims, sct = sctransformed)
 	sweep.stats <- summarizeSweep(sweep.res.list, GT = FALSE)
 	bcmvn <- find.pK(sweep.stats)

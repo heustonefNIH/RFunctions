@@ -46,5 +46,6 @@ color.palette <- c(
   "slategray2",
   "black" 
 )
+color.palette <- c(color.palette, color.palette, color.palette)
 
 # scales::show_col(color.palette)
