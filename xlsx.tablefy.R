@@ -1,55 +1,63 @@
 # Simplify making xlsx.workbooks
 
-xlsx.tablefy <- function(workbook.table = workbook.table, 
-                         sheet.name = sheet.name, 
-                         workbook.name = workbook.name, 
-                         sort.it = TRUE,
-                         style = TRUE, 
-                         style.cols = 1, #numeric list or character to pass to grep(pattern, x= colnames(workbook.table))
-                         veryhigh.rule = ">=2", 
-                         high.rule = ">=1.5", 
-                         low.rule = "<=-1.5", 
-                         verylow.rule = "<=-2", 
-                         type = "expression",
-                         start.Col = 1, 
-                         start.Row = 1, 
-                         col.Names = TRUE){
+xlsx.tablefy <- function(
+    workbook.table,
+    sheet.name,
+    workbook.name,
+    sort.it = TRUE,
+    style = TRUE ,
+    style.cols = "avg_log2FC",
+    veryhigh.rule = 2,
+    high.rule = 1.5,
+    low.rule = -1.5,
+    verylow.rule = -2,
+    type = "expression",
+    start.Col = 1,
+    start.Row = 1,
+    col.Names = TRUE
+){
+   sort.it = TRUE
+  style = TRUE 
+  style.cols = "avg_log2FC"
+  veryhigh.rule = 2
+  high.rule = 1.5
+  low.rule = -1.5
+  verylow.rule = -2
+  type = "expression"
+  start.Col = 1
+  start.Row = 1
+  col.Names = TRUE
   
-  `%threshold_high%` <- function(x, y) eval(parse(text = paste(x, high.rule)))
-  `%threshold_veryhigh%` <- function(x, y) eval(parse(text = paste(x, veryhigh.rule)))
-  `%threshold_low%` <- function(x, y) eval(parse(text = paste(x, low.rule)))
-  `%threshold_verylow%` <- function(x, y) eval(parse(text = paste(x, verylow.rule)))
   
-  ##write all markers to table
+  
+  
   if(sort.it == TRUE){
-    workbook.table <- workbook.table %>% 
-      group_by(cluster) %>%
+    workbook.table <- test.tbl %>% 
+      mutate(
+        sort_col = abs(avg_log2FC)
+      ) %>%
       mutate(
         sort_group = case_when(
-          avg_log2FC %threshold_veryhigh% 2 ~ 1,  # Group 1
-          avg_log2FC %threshold_verylow% -2 ~ 2, # Group 2
-          avg_log2FC %threshold_high% 1.5 ~ 3, # Group 3
-          avg_log2FC %threshold_low% 1.5 ~ 4, # Group 4
-          TRUE ~ 5                  # Default group for remaining values
+          avg_log2FC >= veryhigh.rule ~ 1,
+          avg_log2FC <= verylow.rule ~ 2,
+          avg_log2FC >= high.rule & avg_log2FC < veryhigh.rule ~ 3,
+          avg_log2FC <= low.rule & avg_log2FC > verylow.rule ~ 4,
+          TRUE ~ 5
         )
-      ) %>%
-      arrange(
-        sort_group,                 # Sort by groups
-        dplyr::desc(avg_log2FC) * (sort_group == 1) + # dplyr::descending for group 1
-          avg_log2FC * (sort_group == 2) +    # Ascending for group 2
-          dplyr::desc(avg_log2FC) * (sort_group == 3) + # dplyr::descending for group 3
-        avg_log2FC * (sort_group == 4)  # Ascending for group 4
       ) %>% 
-      select(-sort_group) %>% 
-      mutate(across(.fns = as.character)) %>%
+      arrange(as.numeric(cluster), sort_group, -sort_col) %>% 
+      select(avg_log2FC, p_val_adj, cluster, gene) %>% 
+      group_by(cluster) %>%
       group_split()
     
   }else{
     workbook.table <- workbook.table %>% 
       group_by(cluster) %>% 
-      mutate(across(.fns = as.character)) %>%
+      select(avg_log2FC, p_val_adj, cluster, gene) %>% 
+      # mutate(across(.cols = everything(), .fns = as.character)) %>%
       group_split()
   }
+  
   row.max <- max(
     sapply(1:length(workbook.table), 
            function(x){
@@ -57,6 +65,7 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
            }
     )
   )
+  
   for(i in 1:length(workbook.table)){
     gene.count <- dim(workbook.table[[i]])[1]
     spacer <- row.max - gene.count
@@ -69,6 +78,7 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
   workbook.table <- workbook.table %>% 
     bind_cols() %>% 
     mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(workbook.table))), as.numeric)
+  
   
   openxlsx::addWorksheet(workbook.name, sheetName = sheet.name)
   openxlsx::writeData(workbook.name, sheet = sheet.name, x = workbook.table, startCol = start.Col, startRow = start.Row, colNames = col.Names)
@@ -86,28 +96,41 @@ xlsx.tablefy <- function(workbook.table = workbook.table,
       openxlsx::conditionalFormatting(workbook.name, sheet = sheet.name, 
                                       cols = col.to.format, 
                                       rows = 1:nrow(workbook.table) +1,
-                                      rule = high.rule, 
+                                      rule =  c(high.rule, veryhigh.rule), 
                                       style = style.high, 
-                                      type = "expression", stack = TRUE)
+                                      type = "between", stack = TRUE)
       openxlsx::conditionalFormatting(workbook.name, sheet = sheet.name, 
                                       cols = col.to.format, 
                                       rows = 1:nrow(workbook.table) +1,
-                                      rule = veryhigh.rule, 
+                                      rule = paste0(">=", veryhigh.rule), 
                                       style = style.veryhigh, 
                                       type = "expression", stack = TRUE)
       openxlsx::conditionalFormatting(workbook.name, sheet = sheet.name, 
                                       cols = col.to.format, 
                                       rows = 1:nrow(workbook.table) +1,
-                                      rule = low.rule, 
+                                      rule = c(low.rule, verylow.rule), 
                                       style = style.low, 
-                                      type = "expression", stack = TRUE)
+                                      type = "between", stack = TRUE)
       openxlsx::conditionalFormatting(workbook.name, sheet = sheet.name, 
                                       cols = col.to.format, 
                                       rows = 1:nrow(workbook.table) +1,
-                                      rule = verylow.rule, 
+                                      rule = paste0("<=", verylow.rule), 
                                       style = style.verylow, 
                                       type = "expression", stack = TRUE)
     }
     
   } 
+  
 }
+
+#test it
+
+test.tbl <- readRDS("../PancDB/temp_delby20250818/PancDB-allMarkers_noMAST.rds")
+
+##create workbook
+markers.table <- openxlsx::createWorkbook()
+
+xlsx.tablefy(test.tbl, sheet.name = "temp", workbook.name = markers.table)
+
+##save workbook
+openxlsx::saveWorkbook(wb = markers.table, file = "temp.xlsx", overwrite = TRUE, returnValue = TRUE)
