@@ -16,23 +16,8 @@ xlsx.tablefy <- function(
     start.Row = 1,
     col.Names = TRUE
 ){
-   sort.it = TRUE
-  style = TRUE 
-  style.cols = "avg_log2FC"
-  veryhigh.rule = 2
-  high.rule = 1.5
-  low.rule = -1.5
-  verylow.rule = -2
-  type = "expression"
-  start.Col = 1
-  start.Row = 1
-  col.Names = TRUE
-  
-  
-  
-  
   if(sort.it == TRUE){
-    workbook.table <- test.tbl %>% 
+    workbook.table <- workbook.table %>% 
       mutate(
         sort_col = abs(avg_log2FC)
       ) %>%
@@ -48,13 +33,11 @@ xlsx.tablefy <- function(
       arrange(as.numeric(cluster), sort_group, -sort_col) %>% 
       select(avg_log2FC, p_val_adj, cluster, gene) %>% 
       group_by(cluster) %>%
-      group_split()
-    
+      group_split() 
   }else{
     workbook.table <- workbook.table %>% 
       group_by(cluster) %>% 
       select(avg_log2FC, p_val_adj, cluster, gene) %>% 
-      # mutate(across(.cols = everything(), .fns = as.character)) %>%
       group_split()
   }
   
@@ -76,6 +59,12 @@ xlsx.tablefy <- function(
     }
   }
   workbook.table <- workbook.table %>% 
+    purrr::map(
+      ~ {
+        cluster_name <- unique(.x$cluster)[1]
+        rename_with(.x, ~ paste0(., "_", cluster_name))
+      }
+    ) %>% 
     bind_cols() %>% 
     mutate_at(vars(grep("avg_log2FC|p_val_adj", colnames(workbook.table))), as.numeric)
   
@@ -134,3 +123,4 @@ xlsx.tablefy(test.tbl, sheet.name = "temp", workbook.name = markers.table)
 
 ##save workbook
 openxlsx::saveWorkbook(wb = markers.table, file = "temp.xlsx", overwrite = TRUE, returnValue = TRUE)
+
