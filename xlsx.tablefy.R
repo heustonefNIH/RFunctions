@@ -31,13 +31,13 @@ xlsx.tablefy <- function(
         )
       ) %>% 
       arrange(as.numeric(cluster), sort_group, -sort_col) %>% 
-      select(avg_log2FC, p_val_adj, cluster, gene) %>% 
+      dplyr::select(avg_log2FC, p_val_adj, cluster, gene) %>% 
       group_by(cluster) %>%
       group_split() 
   }else{
     workbook.table <- workbook.table %>% 
       group_by(cluster) %>% 
-      select(avg_log2FC, p_val_adj, cluster, gene) %>% 
+      dplyr::select(avg_log2FC, p_val_adj, cluster, gene) %>% 
       group_split()
   }
   
