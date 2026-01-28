@@ -112,15 +112,15 @@ xlsx.tablefy <- function(
   
 }
 
-#test it
-
-test.tbl <- readRDS("../PancDB/temp_delby20250818/PancDB-allMarkers_noMAST.rds")
-
-##create workbook
-markers.table <- openxlsx::createWorkbook()
-
-xlsx.tablefy(test.tbl, sheet.name = "temp", workbook.name = markers.table)
-
-##save workbook
-openxlsx::saveWorkbook(wb = markers.table, file = "temp.xlsx", overwrite = TRUE, returnValue = TRUE)
-
+# #test it
+# 
+# test.tbl <- readRDS("../PancDB/temp_delby20250818/PancDB-allMarkers_noMAST.rds")
+# 
+# ##create workbook
+# markers.table <- openxlsx::createWorkbook()
+# 
+# xlsx.tablefy(test.tbl, sheet.name = "temp", workbook.name = markers.table)
+# 
+# ##save workbook
+# openxlsx::saveWorkbook(wb = markers.table, file = "temp.xlsx", overwrite = TRUE, returnValue = TRUE)
+# 
