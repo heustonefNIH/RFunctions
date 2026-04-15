@@ -2,10 +2,10 @@ library(reticulate)
 
 # py_install("scrublet")
 
-runscrublet <- function(seurat.object){
+runScrublet <- function(seurat.object){
 	
 	scr <- import("scrublet")
-	counts <- t(as.matrix(GetAssayData(seurat.object, slot = "counts")))
+	counts <- t(as.matrix(LayerData(seurat.object, layer = "counts")))
 	
 	scrub <- scr$Scrublet(counts)
 	results <- scrub$scrub_doublets()
