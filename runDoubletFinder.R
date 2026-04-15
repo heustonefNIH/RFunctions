@@ -15,18 +15,30 @@
 library(DoubletFinder)
 library(ggplot2)
 
-runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05, pANN.reuse = NULL){
+runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05, pANN.reuse = NULL, show.plots = FALSE){
 	
 	print("running DoubletFinder")
+	
+	#Find elbow inflection point to use in runDoubletFinder & log result
+	pcs_stdev <- seurat.object[["pca"]]@stdev
+	x <- seq_along(pcs_stdev)
+	knee <- inflection::uik(x, pcs_stdev)
+	dims_use <- 1:knee
+	dims_use
+	
+	log.msg(log.pp, msg = paste("Using", knee, "dims to define elbow inflection point in", names(sc.data)[i]))
+	
+	
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
 	sweep.res.list <- paramSweep(seurat.object, PCs = 1:cluster.dims, sct = sctransformed)
 	sweep.stats <- summarizeSweep(sweep.res.list, GT = FALSE)
 	bcmvn <- find.pK(sweep.stats)
 	
-	ggplot(bcmvn, aes(pK, BCmetric, group = 1)) +
-		geom_point() +
-		geom_line()
-	
+	if(show.plots){
+		ggplot(bcmvn, aes(pK, BCmetric, group = 1)) +
+			geom_point() +
+			geom_line()
+	}	
 	pK <- bcmvn %>% # select the pK that corresponds to max bcmvn to optimize doublet detection
 		filter(BCmetric == max(BCmetric)) %>%
 		select(pK) 
@@ -38,15 +50,15 @@ runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, 
 	homotypic.prop <- modelHomotypic(annotations) 
 	nExp_poi <- round(nrow(seurat.object@meta.data) * predicted.doubletRate) 
 	nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
-
-seurat.object <- doubletFinder(seurat.object,
-																	PCs = 1:cluster.dims, 
-																	pK = pK, 
-																	nExp = nExp_poi, 
-																	reuse.pANN = pANN.reuse,
-																	sct = sctransformed)
-names(seurat.object@meta.data)[grep("DF.cl", names(seurat.object@meta.data))] <- "DF.classifications"
-names(seurat.object@meta.data)[grep("pANN", names(seurat.object@meta.data))] <- "pANN"
-
-return(seurat.object)
+	
+	seurat.object <- doubletFinder(seurat.object,
+																 PCs = 1:cluster.dims, 
+																 pK = pK, 
+																 nExp = nExp_poi, 
+																 reuse.pANN = pANN.reuse,
+																 sct = sctransformed)
+	names(seurat.object@meta.data)[grep("DF.cl", names(seurat.object@meta.data))] <- "DF.classifications"
+	names(seurat.object@meta.data)[grep("pANN", names(seurat.object@meta.data))] <- "pANN"
+	
+	return(seurat.object)
 }
