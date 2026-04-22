@@ -6,6 +6,7 @@ doublet_detector <- function(
 		logger,
 		sctransform = FALSE,
 		sourceable.functions = "RFunctions",
+		return_filtered = TRUE,
 		pANN.reuse = NULL,
 		doublet.var.thresh = 90, 
 		predicted.doubletRate = 0.05)
@@ -19,6 +20,12 @@ doublet_detector <- function(
 																			sctransformed = do.sctransform, 
 																			predicted.doubletRate = predicted.doubletRate,
 																			pANN.reuse = NULL)
+		if(return_filtered == TRUE){
+			seurat.object <- subset(
+				seurat.object, 
+				subset = DF.classifications == "Singlet"
+			)
+		}
 		return(seurat.object)
 	} else if(detector == "scrublet"){
 		msg <- "Running scrublet"
@@ -26,11 +33,17 @@ doublet_detector <- function(
 		log.msg(logger, msg = msg)
 		source(file.path(sourceable.functions, "runScrublet.R"))
 		seurat.object <- runScrublet(seurat.object)
-		return(seurat.object)
-	} else {
-		msg <- "no doublet detector specified"
-		print(msg)
-		log.msg(logger, msg = msg)
-
-	}
+		if(return_filtered == TRUE){
+			seurat.object <- subset(
+				seurat.object, 
+				subset = is_doublet == FALSE
+			)
+		}
+			return(seurat.object)
+		} else {
+			msg <- "no doublet detector specified"
+			print(msg)
+			log.msg(logger, msg = msg)
+			
+		}
 }
