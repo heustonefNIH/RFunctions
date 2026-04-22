@@ -11,7 +11,7 @@ doublet_detector <- function(
 		doublet.var.thresh = 90, 
 		predicted.doubletRate = 0.05)
 {
-	if(detector == "DoubletFinder"){
+	if(toupper(detector) == "DOUBLETFINDER"){
 		msg <- "Running doubletfinder"
 		pring(msg)
 		log.msg(logger, msg = msg)
@@ -27,7 +27,7 @@ doublet_detector <- function(
 			)
 		}
 		return(seurat.object)
-	} else if(detector == "scrublet"){
+	} else if(toupper(detector) == "SCRUBLET"){
 		msg <- "Running scrublet"
 		print(msg)
 		log.msg(logger, msg = msg)
