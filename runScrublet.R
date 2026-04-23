@@ -2,7 +2,7 @@ library(reticulate)
 
 # py_install("scrublet")
 
-runscrublet <- function(seurat.object){
+runScrublet <- function(seurat.object){
 	
 	scr <- import("scrublet")
 	counts <- t(as.matrix(GetAssayData(seurat.object, layer = "counts")))
