@@ -15,18 +15,24 @@
 library(DoubletFinder)
 library(ggplot2)
 
-runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, sctransformed = FALSE, predicted.doubletRate = 0.05, pANN.reuse = NULL, show.plots = FALSE){
-	
-	print("running DoubletFinder")
+runDoubletFinder <- function(
+		seurat.object = NULL, 
+		seurat.identifier = NULL,
+		cluster.dims = 15, 
+		sctransformed = FALSE, 
+		predicted.doubletRate = 0.05, 
+		logger = NULL,
+		pANN.reuse = NULL, 
+		show.plots = FALSE
+){
 	
 	#Find elbow inflection point to use in runDoubletFinder & log result
 	pcs_stdev <- seurat.object[["pca"]]@stdev
-	x <- seq_along(pcs_stdev)
-	knee <- inflection::uik(x, pcs_stdev)
+	cum_var <- cumsum(pcs_stdev^2) / sum(pcs_stdev^2)
+	knee <- which(cum_var >= var.explained)[1]  # raise threshold to be less conservative, e.g. 0.85, 0.90
 	dims_use <- 1:knee
-	dims_use
 	
-	log.msg(log.pp, msg = paste("Using", knee, "dims to define elbow inflection point in", names(sc.data)[i]))
+	log.msg(logger, msg = paste("Using", knee, "dims to define elbow inflection point in", seurat.identifier))
 	
 	
 	## pK Identification (no ground-truth) ---------------------------------------------------------------------------------------
@@ -43,8 +49,8 @@ runDoubletFinder <- function(seurat.object = NULL, cluster.dims = cluster.dims, 
 		filter(BCmetric == max(BCmetric)) %>%
 		select(pK) 
 	pK <- as.numeric(as.character(pK[[1]]))
-	print(paste0("Found pK = ", pK))
-	
+	log.msg(logger, msg = paste("Found pK =", pK, "in", seurat.identifier))
+
 	## Homotypic Doublet Proportion Estimate -------------------------------------------------------------------------------------
 	annotations <- seurat.object@meta.data$seurat_clusters
 	homotypic.prop <- modelHomotypic(annotations) 
