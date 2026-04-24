@@ -6,18 +6,29 @@ doublet_detector <- function(
 		sctransform = FALSE,
 		sourceable.functions = RFunctions,
 		return_filtered = TRUE,
+		seurat.identifier = NULL,
 		pANN.reuse = NULL,
+		cluster.dims = 15, 
+		var.explained = 0.85,
 		doublet.var.thresh = 90, 
-		predicted.doubletRate = 0.05)
+		predicted.doubletRate = 0.05, 
+		show.plots = FALSE)
 {
-	if(detector == "DoubletFinder"){
+	if(detector == "DOUBLETFINDER"){
 		msg <- "Running doubletfinder"
 		log.msg(logger, msg = msg)
 		source(file.path(sourceable.functions, "runDoubletFinder.R"))
-		seurat.object <- runDoubletFinder(seurat.object, 
-																			sctransformed = do.sctransform, 
-																			predicted.doubletRate = predicted.doubletRate, 
-																			pANN.reuse = NULL)
+		seurat.object <- runDoubletFinder(
+			seurat.object, 
+			seurat.identifier = seurat.identifier,
+			cluster.dims = cluster.dims,
+			logger = logger,
+			sctransformed = sctransform, 
+			pANN.reuse = pANN.reuse, 
+			var.explained = var.explained,
+			predicted.doubletRate = predicted.doubletRate, 
+			show.plots = show.plots)
+		
 		if(return_filtered == TRUE){
 			seurat.object <- subset(
 				seurat.object, 
@@ -25,7 +36,7 @@ doublet_detector <- function(
 			)
 		}
 		return(seurat.object)
-	} else if(detector == "scrublet"){
+	} else if(detector == "SCRUBLET"){
 		msg <- "Running scrublet"
 		log.msg(logger, msg = msg)
 		source(file.path(sourceable.functions, "runScrublet.R"))
@@ -42,7 +53,6 @@ doublet_detector <- function(
 		return(seurat.object)
 	} else {
 		msg <- "no doublet detector specified"
-		print(msg)
 		log.msg(logger, msg = msg)
 		
 	}
