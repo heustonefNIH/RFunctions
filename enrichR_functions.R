@@ -23,8 +23,12 @@ enrichr_run <- function(
     fc.threshold, 
     n_max = Inf,
     rnaProject, 
+    n_threads = NULL,
     enrichr_dir = "", 
-    file_suffix = ""){
+    file_suffix = NULL){
+	if(!is.null(file_suffix)){
+		file_suffix <- paste0("-", file_suffix)
+	}
 
   adjPval.character <- paste0("adjP", enrichr_adjPval)
   
@@ -56,8 +60,9 @@ enrichr_run <- function(
   
   file.name <- paste0(rnaProject, "-EnrichR", adjPval.character, "-", file_suffix)
   print(paste("saving", file.name))
-  saveRDS(
-    enr.df, file = paste0(enrichr_dir, file.name, ".RDS")
+  qs_read(
+    enr.df, file = paste0(enrichr_dir, file.name, ".qs2"), 
+    nthreads = n_threads
     )
   write.table(
     enr.df, 
