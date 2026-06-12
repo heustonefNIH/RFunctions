@@ -60,6 +60,11 @@ unregister_parallel <- function(){
 
 #Biowulf is linux, so you can use FORK clusters. FORK inherits the whole env so you don't have to remmeber to pass it every little thing. Problem is that FORK doesn't work on Windows. On Windows you HAVE to use SOCK.
 
+# Usage:
+#   enable_doparallel()
+#   results <- foreach(i = 1:n, .combine = "c") %dopar% { ... }
+#   unregister_parallel()
+
 enable_doparallel <- function(){
 	unregister_parallel()
 	n <- get_workers()
@@ -71,9 +76,11 @@ enable_doparallel <- function(){
 	invisible(cl)
 }
 
-
-message("doParallel (FORK) registered with ", n, " workers.")
-invisible(cl)
+# future::multisession (best for Seurat computations)
+# Usage:
+#   enable_multisession()
+#   seurat_obj <- SCTransform(seurat_obj)
+#   unregister_parallel()
 
 enable_multisession <- function(){
 	unregister_parallel()
@@ -84,6 +91,13 @@ enable_multisession <- function(){
 		options(future.rng.onMisuse = "ignore")  # optional
 	}
 }
+
+
+#biocparallel::snow (best for tradeseq)
+# Usage:
+#   enable_snow()
+#   models <- fitGAM(counts, sds = sds)
+#   unregister_parallel()
 
 enable_snow <- function(){
 	unregister_parallel()
