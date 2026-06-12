@@ -12,7 +12,7 @@ local.functions <- paste(
 )
 
 tryCatch({
-	pacman::p_load(dplyr, Seurat, patchwork, cowplot, qs2, install = F)
+	pacman::p_load(dplyr, Seurat, patchwork, cowplot, ggplot2, qs2, install = F)
 	invisible(sapply(local.functions, source))
 	setwd(rna.dir)
 }, error = function(e){
@@ -24,100 +24,96 @@ tryCatch({
 qc_plots <- function(
 		seurat.object,
 		file.prefix,
-		file.suffix = NULL,
-		features = c("percent.mt", "percent.ribo", "nCount_RNA", "nFeature_RNA"), 
 		cols = color.palette, 
-		pt.size = 0,
-		split.by = NULL, 
-		split.plot = FALSE,
 		show_plot = FALSE,
 		px.width = 800,
-		px.height = 1000
+		px.height = 800
 )
 {
-	for(feature in features){
-		if(is.null(file.suffix)){
-			file.name <- paste0(file.prefix, "-", feature, ".png")
-		} else {
-			file.name <- paste0(file.prefix, "-", feature, file.suffix, ".png")
-		}
-		metadata <- seurat.object@meta.data
-		# Visualize the number UMIs/transcripts per cell
-		metadata %>% 
-			ggplot(aes(x=nCount_RNA)) + 
-			geom_density(alpha = 0.2) + 
-			scale_x_log10() + 
-			theme_classic() +
-			ylab("Cell density") +
-			geom_vline(xintercept = 500)
-		png(filename = file.name, width = px.width, height = px.height)
+	metadata <- seurat.object@meta.data
+	# Visualize the number UMIs/transcripts per cell
+	p1 <- metadata %>% 
+		ggplot(aes(x=nCount_RNA)) + 
+		geom_density(alpha = 0.2) + 
+		scale_x_log10() + 
+		theme_classic() +
+		ylab("Cell density") +
+		geom_vline(xintercept = 500)
+	png(filename = paste0(file.prefix, "-nCount_RNA_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	
+	# Visualize the distribution of genes detected per cell via histogram
+	p1 <- metadata %>% 
+		ggplot(aes(x=nFeature_RNA)) + 
+		geom_density(alpha = 0.2) + 
+		theme_classic() +
+		scale_x_log10() + 
+		geom_vline(xintercept = 300)
+	png(filename = paste0(file.prefix, "-nFeature_RNA_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	if(show_plot == TRUE){
 		plot(p1)
-		dev.off()
-		
-		# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
-		metadata %>% 
-			ggplot(aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) + 
-			geom_point() + 
-			scale_colour_gradient(low = "gray90", high = "black") +
-			stat_smooth(method=lm) +
-			scale_x_log10() + 
-			scale_y_log10() + 
-			theme_classic() +
-			geom_vline(xintercept = 500) +
-			geom_hline(yintercept = 250) +
-			facet_wrap(~sample)
-		png(filename = file.name, width = px.width, height = px.height)
+	}
+	
+	# Visualize the distribution of mitochondrial gene expression detected per cell
+	p1 <- metadata %>% 
+		ggplot(aes(x=percent.mt)) + 
+		geom_density(alpha = 0.2) + 
+		scale_x_log10() + 
+		theme_classic() +
+		geom_vline(xintercept = 0.2)
+	png(filename = paste0(file.prefix, "-percent.mt_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	if(show_plot == TRUE){
 		plot(p1)
-		dev.off()
-		
-		# Visualize the distribution of genes detected per cell via histogram
-		metadata %>% 
-			ggplot(aes(x=nFeature_RNA)) + 
-			geom_density(alpha = 0.2) + 
-			theme_classic() +
-			scale_x_log10() + 
-			geom_vline(xintercept = 300)
-		png(filename = file.name, width = px.width, height = px.height)
+	}
+	
+	# Visualize the distribution of mitochondrial gene expression detected per cell
+	p1 <- metadata %>% 
+		ggplot(aes(x=percent.ribo)) + 
+		geom_density(alpha = 0.2) + 
+		scale_x_log10() + 
+		theme_classic() +
+		geom_vline(xintercept = 0.2)
+	png(filename = paste0(file.prefix, "-percent.ribo_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	if(show_plot == TRUE){
 		plot(p1)
-		dev.off()
-		
-		# Visualize the distribution of mitochondrial gene expression detected per cell
-		metadata %>% 
-			ggplot(aes(x=percent.mt)) + 
-			geom_density(alpha = 0.2) + 
-			scale_x_log10() + 
-			theme_classic() +
-			geom_vline(xintercept = 0.2)
-		png(filename = file.name, width = px.width, height = px.height)
+	}
+	
+	# Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI
+	p1 <- metadata %>%
+		ggplot(aes(x=log10GenesPerUMI)) +
+		geom_density(alpha = 0.2) +
+		theme_classic() +
+		geom_vline(xintercept = 0.8)
+	png(filename = paste0(file.prefix, "-log10GenesPerUMI_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	if(show_plot == TRUE){
 		plot(p1)
-		dev.off()
+	}
 
-		# Visualize the distribution of mitochondrial gene expression detected per cell
-		metadata %>% 
-			ggplot(aes(x=percent.ribo)) + 
-			geom_density(alpha = 0.2) + 
-			scale_x_log10() + 
-			theme_classic() +
-			geom_vline(xintercept = 0.2)
-		png(filename = file.name, width = px.width, height = px.height)
+		# Visualize the correlation between genes detected and number of UMIs and determine whether strong presence of cells with low numbers of genes/UMIs
+	p1 <- metadata %>% 
+		ggplot(aes(x=nCount_RNA, y=nFeature_RNA)) + 
+		geom_point(aes(color=percent.mt)) + 
+		scale_colour_gradient(low = "gray90", high = "black") +
+		stat_smooth(method=lm) +
+		scale_x_log10() + 
+		scale_y_log10() + 
+		theme_classic() +
+		geom_vline(xintercept = 500) +
+		geom_hline(yintercept = 250)
+	png(filename = paste0(file.prefix, "-CountFeaturePctmt_qc.png"), width = px.width, height = px.height)
+	plot(p1)
+	dev.off()
+	if(show_plot == TRUE){
 		plot(p1)
-		dev.off()
-		
-		# Visualize the overall complexity of the gene expression by visualizing the genes detected per UMI
-		metadata %>%
-			ggplot(aes(x=log10GenesPerUMI)) +
-			geom_density(alpha = 0.2) +
-			theme_classic() +
-			geom_vline(xintercept = 0.8)
-		png(filename = file.name, width = px.width, height = px.height)
-		plot(p1)
-		dev.off()
-		
-		
-		
-		if(show_plot == TRUE){
-			plot(p1)
-		}
 	}
 }
 
