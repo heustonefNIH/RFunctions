@@ -36,16 +36,17 @@ tryCatch({
 unregister_parallel <- function(){
 	#stop doparallel cluster if you've got one
 	if (requireNamespace("foreach", quietly = TRUE) &&
+			foreach::getDoParRegistered() &&
 			foreach::getDoParWorkers() > 1 &&
 			requireNamespace("doParallel", quietly = TRUE)) {
-		doParallel::stopImplicitCluster()
+		try(doParallel::stopImplicitCluster(), silent = TRUE)
 	}
-	#cluster handels are stored in .cl_env; either close it here or manually each time
-	if(exists(".cl_env", inherits = FALSE) && exists("cl", envir = .cl_env)){
+	#cluster handles are stored in .cl_env; either close it here or manually each time
+	if(exists("cl", envir = .cl_env, inherits = FALSE) && exists("cl", envir = .cl_env)){
 		try(parallel::stopCluster(.cl_env$cl), silent = TRUE)
 		rm("cl", envir = .cl_env)
 	}
-	#now reset future and bioparallel
+	#now reset future and bioparallel and set everything back to to serial
 	if (requireNamespace("future", quietly = TRUE)){
 		future::plan("sequential")
 	}
@@ -53,27 +54,37 @@ unregister_parallel <- function(){
 		BiocParallel::register(BiocParallel::SerialParam())
 	}
 	message("Parallel backends unregistered.")
+	invisible(NULL)
 }
 
 
 # Parallelization calls ---------------------------------------------------
 
-#Biowulf is linux, so you can use FORK clusters. FORK inherits the whole env so you don't have to remmeber to pass it every little thing. Problem is that FORK doesn't work on Windows. On Windows you HAVE to use SOCK.
+#Biowulf is linux, so you can use FORK clusters. FORK inherits the whole env so you don't have to remmeber to pass it every little thing. Problem is that FORK doesn't work on Windows and is unstable in RStudio. On Windows and RStudio, you have to do you HAVE to use SOCK.
 
 # Usage:
 #   enable_doparallel()
 #   results <- foreach(i = 1:n, .combine = "c") %dopar% { ... }
 #   unregister_parallel()
 
-enable_doparallel <- function(){
+enable_doparallel <- function(verbose = TRUE){
 	unregister_parallel()
 	n <- get_workers()
-	cl <- parallel::makeForkCluster(n)
-	.cl_env$cl <- cl
-	doParallel::registerDoParallel(cl)
+	#Don't use forking if in RSTUDIO or WINDOWS
+	use_fork <- !interactive() && .Platform$OS.type == "unix"
+	if(use_fork){
+		cluster_handle <- parallel::makeForkCluster(n)
+		if (verbose) message("FORK cluster: ", n, " workers (batch mode).")
+	}
+	else {
+		cluster_handle <- parallel::makePSOCKcluster(n)
+		if (verbose) message("PSOCK cluster: ", n, " workers (interactive/RStudio-safe).")
+	}
+	.cl_env$cl <- cluster_handle
+	doParallel::registerDoParallel(cluster_handle)
 	options(future.globals.maxSize = +Inf)
-	message("doParallel (FORK) registered with ", n, " workers.")
-	invisible(cl)
+	if (verbose) message("Parallel backends unregistered.")
+	invisible(cluster_handle)
 }
 
 # future::multisession (best for Seurat computations)
@@ -82,14 +93,17 @@ enable_doparallel <- function(){
 #   seurat_obj <- SCTransform(seurat_obj)
 #   unregister_parallel()
 
-enable_multisession <- function(){
-	unregister_parallel()
-	if (requireNamespace("future", quietly = TRUE)) {
-		future::plan(future::multisession, workers = get_workers())
-		options(future.globals.maxSize = +Inf)
-		message("future::multisession registered with ", get_workers(), " workers.")
-		options(future.rng.onMisuse = "ignore")  # optional
+enable_multisession <- function(verbose = TRUE){
+	unregister_parallel(verbose = FALSE)
+	if (!requireNamespace("future", quietly = TRUE)) {
+		warning("Package 'future' not available; staying serial.")
+		return(invisible(NULL))
 	}
+	n <- get_workers()
+	future::plan(future::multisession, workers = n)
+	options(future.globals.maxSize = +Inf)
+	options(future.rng.onMisuse = "ignore")  # optional
+	if (verbose) message("future::multisession registered with ", n, " workers")
 }
 
 
@@ -99,15 +113,19 @@ enable_multisession <- function(){
 #   models <- fitGAM(counts, sds = sds)
 #   unregister_parallel()
 
-enable_snow <- function(){
-	unregister_parallel()
-	if (requireNamespace("BiocParallel", quietly = TRUE)) {
+enable_snow <- function(verbose = TRUE){
+	unregister_parallel(verbose = FALSE)
+	if (!requireNamespace("BiocParallel", quietly = TRUE)) {
+		warning("Package 'BiocParallel not available; staying serial.")
+		return(invisible(NULL))
+	}
+	n <- get_workers()
 		p <- BiocParallel::SnowParam(
-			workers = get_workers(),
+			workers = n,
 			type = "SOCK",
 			progressbar = TRUE
 		)
 		BiocParallel::register(p)
-		message("BiocParallel::SnowParam registered with ", get_workers(), " workers.")
-	}
+		if (verbose) message("BiocParallel::SnowParam registered with ", get_workers(), " workers.")
+		invisible(NULL)
 }
