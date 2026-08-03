@@ -21,7 +21,6 @@ enrichr_run <- function(
 		enrichr_adjPval = 0.05, 
 		n_max = Inf,
 		rnaProject, 
-		n_threads = NULL,
 		enrichr_dir = "", 
 		file_suffix = NULL, 
 		n_threads = 1){

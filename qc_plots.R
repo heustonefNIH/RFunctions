@@ -5,12 +5,6 @@
 
 # Load libraries ----------------------------------------------------------
 
-local.functions <- paste(
-	file.path(
-		RFunctions, 
-		c("named_palettes.R"))
-)
-
 tryCatch({
 	pacman::p_load(dplyr, Seurat, patchwork, cowplot, ggplot2, qs2, install = F)
 	invisible(sapply(local.functions, source))
@@ -50,7 +44,7 @@ qc_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -69,7 +63,7 @@ qc_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -87,7 +81,7 @@ qc_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -104,7 +98,7 @@ qc_plots <- function(
 		geom_vline(xintercept = 0.2) + 
 		ggtitle(plot.title)
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}	
@@ -122,7 +116,7 @@ qc_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -145,7 +139,7 @@ qc_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -188,7 +182,7 @@ var.feature_plots <- function(
 		ggtitle(plot.title)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.eight)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.eight)
 		plot(p1)
 		dev.off()
 	}
@@ -229,7 +223,7 @@ dimloadings_plot <-  function(
 		reduction = reduction)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}
@@ -278,7 +272,7 @@ dimheatmap_plot <-  function(
 	)
 	
 	if(save.flag){
-		png(filename = file.path(outdir, plot.title, ".png"), width = px.width, height = px.height)
+		png(filename = file.path(outdir, paste0(plot.title, ".png")), width = px.width, height = px.height)
 		plot(p1)
 		dev.off()
 	}

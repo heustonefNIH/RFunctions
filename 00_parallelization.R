@@ -33,7 +33,7 @@ tryCatch({
 # Internal env to hold the cluster handle so unregister_parallel() can find it
 .cl_env <- new.env(parent = emptyenv())
 
-unregister_parallel <- function(){
+unregister_parallel <- function(verbose = TRUE){
 	#stop doparallel cluster if you've got one
 	if (requireNamespace("foreach", quietly = TRUE) &&
 			foreach::getDoParRegistered() &&
@@ -83,7 +83,7 @@ enable_doparallel <- function(verbose = TRUE){
 	.cl_env$cl <- cluster_handle
 	doParallel::registerDoParallel(cluster_handle)
 	options(future.globals.maxSize = +Inf)
-	if (verbose) message("Parallel backends unregistered.")
+	if (verbose) message("doParallel backend registered with ", n, " workers.")
 	invisible(cluster_handle)
 }
 
