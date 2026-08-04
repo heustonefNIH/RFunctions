@@ -118,6 +118,7 @@ enrichr_graph <- function(
     enr.df, 
     plot_n = 5,     
     sort.by = "db", # one of "db" [default], "celltype", "None"
+    enrichr_dir = "", 
     file_suffix = NULL
 ){
   
