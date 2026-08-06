@@ -150,7 +150,7 @@ enrichr_graph <- function(
 ){
   # File naming -------------------------------------------------------------
   
-  if(!is.null(file_suffix) || nzchar(file_suffix)){
+  if(!is.null(file_suffix) && nzchar(file_suffix)){
     file_suffix <- paste0("-", file_suffix)
   }
   
