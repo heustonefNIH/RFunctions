@@ -28,7 +28,10 @@ qc_plots <- function(
 	if(any(is.null(file.id), is.null(outdir))){
 		warning("file.id and/or outdir not specified; not saving figures")
 	} else {
-		save.flag <- TRUE
+		if (!dir.exists(file.path(rna.dir, outdir))) {
+			dir.create(file.path(rna.dir, outdir), recursive = TRUE)
+}
+save.flag <- TRUE
 	}
 	metadata <- seurat.object@meta.data
 	
