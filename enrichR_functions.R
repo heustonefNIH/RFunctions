@@ -47,6 +47,14 @@ enrichr_run <- function(
 		file_suffix <- paste0("-", file_suffix)
 	}
 	
+	tryCatch({
+		if(!dir.exists(enrichr_dir)){
+			dir.create(file.path(rna.dir, enrichr_dir), recursive = T)
+		}
+		}, error = function(e){
+			message("Failed to find or create ", enrich_dir)
+	})	
+	
 	adjPval.character <- paste0("_adjP", enrichr_adjPval_threshold)
 	
 	for(clust in cluster.list){
