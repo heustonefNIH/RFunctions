@@ -105,6 +105,35 @@ unintegrated.plots <- function(
 	})
 	
 	tryCatch({
+		col.count <- ceiling(
+			sqrt(
+				length(
+					levels(
+						seurat.object@meta.data[["unintegrated_clusters"]]
+						)
+					)
+				)
+			)
+		p1 <- DimPlot(
+			seurat.object, 
+			reduction = "pca", 
+			cols = color.palette, 
+			shuffle = T, 
+			label = F, 
+			group.by = compare.by, 
+			split.by = "unintegrated_clusters", 
+			ncol = col.count) + 
+			transparent.theme
+		plot(p1)
+		png(filename = paste0("pngs/", rnaProject, "-pca-", object.name, "-by_unint-cluster.png"), 
+				height = 1000, width = 1200)
+		plot(p1)
+		dev.off()
+	}, error = function(e){
+		message("Error in plot: ", e$message)
+	})
+
+		tryCatch({
 		p1 <- DimPlot(
 			seurat.object, 
 			reduction = "umap.unintegrated", 
@@ -160,6 +189,35 @@ integrated.plots <- function(
 	
 	# Plot integrated UMAPs -----------------------------------------------------
 	
+		tryCatch({
+		col.count <- ceiling(
+			sqrt(
+				length(
+					levels(
+						seurat.object@meta.data[["rpca_clusters"]]
+						)
+					)
+				)
+			)
+		p1 <- DimPlot(
+			seurat.object, 
+			reduction = "rpca", 
+			cols = color.palette, 
+			shuffle = T, 
+			label = F, 
+			group.by = compare.by, 
+			split.by = "rpca_clusters", 
+			ncol = col.count) + 
+			transparent.theme
+		plot(p1)
+		png(filename = paste0("pngs/", rnaProject, "-rpca-", object.name, "-by_rc.png"), 
+				height = 1000, width = 1200)
+		plot(p1)
+		dev.off()
+	}, error = function(e){
+		message("Error in plot: ", e$message)
+	})
+
 	tryCatch({
 		p1 <- DimPlot(
 			seurat.object, 
